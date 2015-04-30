@@ -1,2 +1,2 @@
-# gs_fxcodebase
-Publip/free indicators and strategies developed for fxcodebase.com
+# Fxcodebase indicators and strategies
+Public/free indicators and strategies developed for fxcodebase.com

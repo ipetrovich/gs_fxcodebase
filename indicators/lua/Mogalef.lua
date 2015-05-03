@@ -30,6 +30,10 @@ function Init()
     indicator.parameters:addInteger("Median_width", "Median Line width", "", 1, 1, 5);
     indicator.parameters:addInteger("Median_style", "Median Line style", "", core.LINE_SOLID);
     indicator.parameters:setFlag("Median_style", core.FLAG_LINE_STYLE);
+    indicator.parameters:addInteger("transparency", "Channel transparency (%)", "", 70, 0, 100);
+    indicator.parameters:addBoolean("draw_channels", "Draw Channels", "", false);
+    indicator.parameters:addColor("Top_stream_color", "Color of Top stream", "", core.rgb(0, 255, 0));
+    indicator.parameters:addColor("Bottom_stream_color", "Color of Bottom stream", "", core.rgb(255, 0, 0));
 end
 
 -- Indicator instance initialization routine
@@ -50,6 +54,7 @@ local Bottom = nil;
 local Multiplier;
 local DEV; 
 local PRICE;
+local topIntStr, midIntStr, botIntStr;
 
 -- Routine
 function Prepare()
@@ -76,16 +81,23 @@ function Prepare()
     
     Median:setWidth(instance.parameters.Median_width);
     Median:setStyle(instance.parameters.Median_style);
+    
+    if instance.parameters.draw_channels then
+        topIntStr = instance:addInternalStream(first, 0);
+        midIntStr = instance:addInternalStream(first, 0);
+        botIntStr = instance:addInternalStream(first, 0);
+        instance:createChannelGroup("topCh", "topCh", topIntStr, midIntStr, instance.parameters.Top_stream_color, 100 - instance.parameters.transparency);
+        instance:createChannelGroup("botCh", "botCh", midIntStr, botIntStr, instance.parameters.Bottom_stream_color, 100 - instance.parameters.transparency);
+    end
 end
 
 -- Indicator calculation routine
 -- TODO: Add your code for calculation output values
 function Update(period)
     if period >= first and source:hasData(period) then
-    
         PRICE[period] = (source.open[period] + source.low[period] + source.high[period] + (2 * source.close[period])) / 5
         
-        if period < first +LRL then 
+        if period < first + LRL then 
             return;
         end
         
@@ -97,15 +109,21 @@ function Update(period)
         
         DEV[period] = mathex.stdev(source.close, period - SDL, period);
         
-        Top[period] = Median[period] + Multiplier*DEV[period];
+        Top[period]    = Median[period] + Multiplier * DEV[period];
         Median[period] = Median[period];
         Bottom[period] = Median[period] - Multiplier * DEV[period];
         
-        if Median[period] < Top[period - 1] and  Median[period] > Bottom[period - 1] then 
-            DEV[period] = DEV[period - 1];
-            Top[period] = Top[period - 1];            
+        if Median[period] < Top[period - 1] and Median[period] > Bottom[period - 1] then 
+            DEV[period]    = DEV[period - 1];
+            Top[period]    = Top[period - 1];            
             Bottom[period] = Bottom[period - 1];
             Median[period] = Median[period - 1];
+        end
+		
+		if topIntStr ~= nil then
+            topIntStr[period] = Top[period];
+            midIntStr[period] = Median[period];
+            botIntStr[period] = Bottom[period];
         end
     end
 end

@@ -29,6 +29,8 @@ function Init()
     indicator.parameters:addStringAlternative("Method", "TriMAgen", "", "TriMAgen");
     indicator.parameters:addStringAlternative("Method", "JSmooth", "", "JSmooth");
     indicator.parameters:addStringAlternative("Method", "KAMA", "", "KAMA");
+	indicator.parameters:addStringAlternative("Method", "ARSI", "", "ARSI");
+	indicator.parameters:addStringAlternative("Method", "VIDYA", "", "VIDYA");
 
     indicator.parameters:addInteger("Period", "Period", "", 20);
     indicator.parameters:addBoolean("ColorMode", "ColorMode", "", true);
@@ -105,6 +107,68 @@ end
 -- Implementations
 -- =============================================================================
 
+function ARSIInit(source, n)
+    local p = {};
+    p.source = instance.source;
+    p.first = source:first() + n + 1;
+    p.rsi = core.indicators:create("RSI", p.source, Period);
+    return p;
+end
+
+function ARSIUpdate(params, period, mode)
+    params.rsi:update(mode);
+    if period > params.first then
+        local sc = params.rsi.DATA[period] / 100;
+        sc = math.abs(sc - 0.5) * 2;
+        local arsiPrev = params.buffer[period - 1];
+        params.buffer[period] = arsiPrev + sc * (params.source[period] - arsiPrev);    
+    elseif period == params.first then
+        params.buffer[period] = params.source[period];
+    end
+end
+
+function VIDYAInit(source, n)
+    local p = {};
+    p.source = instance.source;
+    p.first_cm = source:first() + 1;
+    p.first = p.first_cm  + Period;
+    p.sc = 2 / (Period + 1);
+    p.cmo1 = instance:addInternalStream(p.first_cm, 0);
+    p.cmo2 = instance:addInternalStream(p.first_cm, 0);
+    return p;
+end
+
+function VIDYAUpdate(params, period, mode)
+    params.cmo1[period] = 0;
+    params.cmo2[period] = 0;
+
+    if period >= params.first_cm then
+        -- calculate CMO
+        local diff;
+        diff = params.source[period] - params.source[period - 1];
+        if diff > 0 then
+            params.cmo1[period] = diff;
+        elseif diff < 0 then
+            params.cmo2[period] = -diff;
+        end
+    end
+
+    if period == params.first then
+        params.buffer[period] = params.source[period];
+    elseif period > first then
+        local pp, cmo, s1, s2, s12summ;
+        pp = period - Period + 1;
+        s1 = mathex.sum(params.cmo1, pp, period);
+        s2 = mathex.sum(params.cmo2, pp, period);
+        s12summ = s1 + s2;
+        if (s12summ ~= 0) then
+            cmo = math.abs((s1 - s2) / s12summ);
+        else
+            cmo = 0;
+        end
+        params.buffer[period] = params.sc * cmo * params.source[period] + (1 - params.sc * cmo) * params.buffer[period - 1];
+    end
+end
 
 
 function KAMAInit(source, n)

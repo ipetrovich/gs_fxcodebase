@@ -9,27 +9,25 @@ function Init()
     indicator:requiredSource(core.Bar);
     indicator:type(core.Indicator);
 
-	
-	 indicator.parameters:addGroup("Calculation");	
+    indicator.parameters:addGroup("Calculation");    
     indicator.parameters:addInteger("LRL", "Linear Regression Length", "Linear Regression Length", 3);
     indicator.parameters:addInteger("SDL", "Standard Deviation Length", "Standard Deviation Length", 7);
-	indicator.parameters:addInteger("Multiplier", "Standard Deviation Multiplier", "Linear Regression Multiplier", 2);
-	
-	
-    indicator.parameters:addGroup("Style");	
+    indicator.parameters:addInteger("Multiplier", "Standard Deviation Multiplier", "Linear Regression Multiplier", 2);
+    
+    indicator.parameters:addGroup("Style");    
     indicator.parameters:addColor("Top_color", "Color of Top", "", core.rgb(0, 255, 0));
     indicator.parameters:addColor("Median_color", "Color of Median", "", core.rgb(255, 0, 0));
     indicator.parameters:addColor("Bottom_color", "Color of Bottom", "", core.rgb(0, 0, 255));
-	
-	indicator.parameters:addInteger("Top_width", "Top Line width", "", 1, 1, 5);
+    
+    indicator.parameters:addInteger("Top_width", "Top Line width", "", 1, 1, 5);
     indicator.parameters:addInteger("Top_style", "Top Line style", "", core.LINE_SOLID);
     indicator.parameters:setFlag("Top_style", core.FLAG_LINE_STYLE);
-	
-	indicator.parameters:addInteger("Bottom_width", "Bottom Line width", "", 1, 1, 5);
+    
+    indicator.parameters:addInteger("Bottom_width", "Bottom Line width", "", 1, 1, 5);
     indicator.parameters:addInteger("Bottom_style", "Bottom Line style", "", core.LINE_SOLID);
     indicator.parameters:setFlag("Bottom_style", core.FLAG_LINE_STYLE);
-	
-	indicator.parameters:addInteger("Median_width", "Median Line width", "", 1, 1, 5);
+    
+    indicator.parameters:addInteger("Median_width", "Median Line width", "", 1, 1, 5);
     indicator.parameters:addInteger("Median_style", "Median Line style", "", core.LINE_SOLID);
     indicator.parameters:setFlag("Median_style", core.FLAG_LINE_STYLE);
 end
@@ -60,23 +58,23 @@ function Prepare()
     SDL = instance.parameters.SDL;
     source = instance.source;
     first = source:first();
-	
-	PRICE= instance:addInternalStream (first, 0);
-    DEV= instance:addInternalStream (first, 0);
-	
+    
+    PRICE = instance:addInternalStream(first, 0);
+    DEV = instance:addInternalStream(first, 0);
+    
     local name = profile:id() .. "(" .. source:name() .. ", " .. LRL .. ", " .. SDL .. ")";
     instance:name(name);
     Top = instance:addStream("Top", core.Line, name .. ".Top", "Top", instance.parameters.Top_color, first);
     Median = instance:addStream("Median", core.Line, name .. ".Median", "Median", instance.parameters.Median_color, first);
     Bottom = instance:addStream("Bottom", core.Line, name .. ".Bottom", "Bottom", instance.parameters.Bottom_color, first);
-	
-	Top:setWidth(instance.parameters.Top_width);
+    
+    Top:setWidth(instance.parameters.Top_width);
     Top:setStyle(instance.parameters.Top_style);
-	
-	Bottom:setWidth(instance.parameters.Bottom_width);
+    
+    Bottom:setWidth(instance.parameters.Bottom_width);
     Bottom:setStyle(instance.parameters.Bottom_style);
-	
-	Median:setWidth(instance.parameters.Median_width);
+    
+    Median:setWidth(instance.parameters.Median_width);
     Median:setStyle(instance.parameters.Median_style);
 end
 
@@ -84,33 +82,31 @@ end
 -- TODO: Add your code for calculation output values
 function Update(period)
     if period >= first and source:hasData(period) then
-	
-	PRICE[period]= (source.open[period] + source.low[period] + source.high[period] + (2 * source.close[period])) / 5
-	
-	if period < first +LRL then 
-	return;
-	end
-	
-	if period < SDL then 
-	return;
-	end
-	
-	Median[period]=mathex.lreg (PRICE, period-LRL, period);
-	
-	DEV[period]= mathex.stdev (source.close, period-SDL, period);
-	
-	
-        Top[period] = Median[period]+Multiplier*DEV[period];
+    
+        PRICE[period] = (source.open[period] + source.low[period] + source.high[period] + (2 * source.close[period])) / 5
+        
+        if period < first +LRL then 
+            return;
+        end
+        
+        if period < SDL then 
+            return;
+        end
+        
+        Median[period] = mathex.lreg(PRICE, period - LRL, period);
+        
+        DEV[period] = mathex.stdev(source.close, period - SDL, period);
+        
+        Top[period] = Median[period] + Multiplier*DEV[period];
         Median[period] = Median[period];
-        Bottom[period] = Median[period]-Multiplier*DEV[period];
-		
-		
-		if Median[period]<Top[period-1] and  Median[period]  > Bottom[period-1] then 
-		        DEV[period]= DEV[period-1];
-			    Top[period] = Top[period-1];			
-				Bottom[period] =Bottom[period-1];
-				Median[period]= Median[period-1];
-		end
+        Bottom[period] = Median[period] - Multiplier * DEV[period];
+        
+        if Median[period] < Top[period - 1] and  Median[period] > Bottom[period - 1] then 
+            DEV[period] = DEV[period - 1];
+            Top[period] = Top[period - 1];            
+            Bottom[period] = Bottom[period - 1];
+            Median[period] = Median[period - 1];
+        end
     end
 end
 

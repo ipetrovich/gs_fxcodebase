@@ -28,7 +28,7 @@ function Init()
     indicator.parameters:addStringAlternative("Method", "IE/2", "", "IE/2");
     indicator.parameters:addStringAlternative("Method", "TriMAgen", "", "TriMAgen");
     indicator.parameters:addStringAlternative("Method", "JSmooth", "", "JSmooth");
-	indicator.parameters:addStringAlternative("Method", "KAMA", "", "KAMA");
+    indicator.parameters:addStringAlternative("Method", "KAMA", "", "KAMA");
 
     indicator.parameters:addInteger("Period", "Period", "", 20);
     indicator.parameters:addBoolean("ColorMode", "ColorMode", "", true);
@@ -70,8 +70,8 @@ function Prepare(onlyName)
     if onlyName then
         return ;
     end
-	
-	KAMA = core.indicators:create("KAMA", source, Period);
+    
+    KAMA = core.indicators:create("KAMA", source, Period);--TODO: optimize
 
     ColorMode = instance.parameters.ColorMode;
     UPclr = instance.parameters.UPclr;
@@ -417,10 +417,8 @@ function DEMAUpdate(params, period, mode)
 end
 
 function KAMAUpdate(params, period, mode)
-
-KAMA:update(mode);
-params.buffer[period] = KAMA.DATA[period];
-   
+    KAMA:update(mode);
+    params.buffer[period] = KAMA.DATA[period];
 end
 
 --

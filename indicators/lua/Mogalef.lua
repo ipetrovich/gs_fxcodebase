@@ -97,10 +97,10 @@ function Prepare()
     Median:setStyle(instance.parameters.Median_style);
     
     if instance.parameters.draw_channels then
-        topIntStr = instance:addInternalStream(first, 0);
-        midIntStrTop  = instance:addInternalStream(first, 0);
-		midIntStrBottom  = instance:addInternalStream(first, 0);
-        botIntStr = instance:addInternalStream(first, 0);
+        topIntStr        = instance:addInternalStream(first, 0);
+        midIntStrTop     = instance:addInternalStream(first, 0);
+	midIntStrBottom  = instance:addInternalStream(first, 0);
+        botIntStr        = instance:addInternalStream(first, 0);
         instance:createChannelGroup("topCh", "topCh", topIntStr, midIntStrTop, instance.parameters.Top_stream_color, 100 - instance.parameters.transparency);
         instance:createChannelGroup("botCh", "botCh", midIntStrBottom, botIntStr, instance.parameters.Bottom_stream_color, 100 - instance.parameters.transparency);
     end
@@ -135,11 +135,11 @@ function Update(period)
             Median[period] = Median[period - 1];
         end
 		
-		if topIntStr ~= nil then
-            topIntStr[period] = Top[period];
-            midIntStrTop[period] = Median[period];
-			midIntStrBottom[period] = Median[period];
-            botIntStr[period] = Bottom[period];
+        if topIntStr ~= nil then
+            topIntStr[period]       = Top[period];
+            midIntStrTop[period]    = Median[period];
+            midIntStrBottom[period] = Median[period];
+            botIntStr[period]       = Bottom[period];
         end
     end
 end

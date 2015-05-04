@@ -5,7 +5,7 @@
 --+------------------------------------------------------------------+
 --|                                      Developed by : Mario Jemic  |     
 --|                                          mario.jemic@gmail.com   |
---|                               Developed by : Victor Tereschenko  |        
+--|                    Modified by : Victor Tereschenko and GS team  |
 --+------------------------------------------------------------------+
 --|                                 Support our efforts by donating  | 
 --|                                    Paypal: http://goo.gl/cEP5h5  |

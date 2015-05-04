@@ -1,3 +1,17 @@
+--+------------------------------------------------------------------+
+--|                                                    Mogalef.lua   |
+--|                               Copyright © 2015, Gehtsoft USA LLC | 
+--|                                            http://fxcodebase.com |
+--+------------------------------------------------------------------+
+--|                                      Developed by : Mario Jemic  |     
+--|                                          mario.jemic@gmail.com   |
+--|                               Developed by : Victor Tereschenko  |        
+--+------------------------------------------------------------------+
+--|                                 Support our efforts by donating  | 
+--|                                    Paypal: http://goo.gl/cEP5h5  |
+--|                    BitCoin : 1MfUHS3h86MBTeonJzWdszdzF2iuKESCKU  |  
+--+------------------------------------------------------------------+
+
 -- http://fxcodebase.com/code/viewtopic.php?f=17&t=4449
 
 -- Indicator profile initialization routine
@@ -54,7 +68,7 @@ local Bottom = nil;
 local Multiplier;
 local DEV; 
 local PRICE;
-local topIntStr, midIntStr, botIntStr;
+local topIntStr, midIntStrTop, midIntStrBottom, botIntStr;
 
 -- Routine
 function Prepare()
@@ -84,10 +98,11 @@ function Prepare()
     
     if instance.parameters.draw_channels then
         topIntStr = instance:addInternalStream(first, 0);
-        midIntStr = instance:addInternalStream(first, 0);
+        midIntStrTop  = instance:addInternalStream(first, 0);
+		midIntStrBottom  = instance:addInternalStream(first, 0);
         botIntStr = instance:addInternalStream(first, 0);
-        instance:createChannelGroup("topCh", "topCh", topIntStr, midIntStr, instance.parameters.Top_stream_color, 100 - instance.parameters.transparency);
-        instance:createChannelGroup("botCh", "botCh", midIntStr, botIntStr, instance.parameters.Bottom_stream_color, 100 - instance.parameters.transparency);
+        instance:createChannelGroup("topCh", "topCh", topIntStr, midIntStrTop, instance.parameters.Top_stream_color, 100 - instance.parameters.transparency);
+        instance:createChannelGroup("botCh", "botCh", midIntStrBottom, botIntStr, instance.parameters.Bottom_stream_color, 100 - instance.parameters.transparency);
     end
 end
 
@@ -122,9 +137,11 @@ function Update(period)
 		
 		if topIntStr ~= nil then
             topIntStr[period] = Top[period];
-            midIntStr[period] = Median[period];
+            midIntStrTop[period] = Median[period];
+			midIntStrBottom[period] = Median[period];
             botIntStr[period] = Bottom[period];
         end
     end
 end
+
 

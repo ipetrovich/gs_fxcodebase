@@ -29,8 +29,8 @@ function Init()
     indicator.parameters:addStringAlternative("Method", "TriMAgen", "", "TriMAgen");
     indicator.parameters:addStringAlternative("Method", "JSmooth", "", "JSmooth");
     indicator.parameters:addStringAlternative("Method", "KAMA", "", "KAMA");
-	indicator.parameters:addStringAlternative("Method", "ARSI", "", "ARSI");
-	indicator.parameters:addStringAlternative("Method", "VIDYA", "", "VIDYA");
+    indicator.parameters:addStringAlternative("Method", "ARSI", "", "ARSI");
+    indicator.parameters:addStringAlternative("Method", "VIDYA", "", "VIDYA");
 
     indicator.parameters:addInteger("Period", "Period", "", 20);
     indicator.parameters:addBoolean("ColorMode", "ColorMode", "", true);
@@ -170,7 +170,6 @@ function VIDYAUpdate(params, period, mode)
     end
 end
 
-
 function KAMAInit(source, n)
     local  p = {};
     p.first = source:first() + n - 1+1;
@@ -181,7 +180,6 @@ end
 
 --
 -- Simple moving average
-
 --
 function MVAInit(source, n)
     local  p = {};

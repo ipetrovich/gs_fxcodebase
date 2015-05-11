@@ -124,7 +124,6 @@ function HPFInit(source, n)
 end
 
 function HPFUpdate(params, period, mode)
-    local source;
     if params.source:isBar() == false then
         core.host:trace("Error: The source must be bars");  
         return;      
@@ -248,12 +247,11 @@ function VAMAUpdate(params, period, mode)
     end
 
     if period >= params.first and params.source:hasData(period) then
-	
-	params.priceTimesVolume[period] = params.source.close[period] * params.source.volume[period];
+       params.priceTimesVolume[period] = params.source.close[period] * params.source.volume[period];
 	   
-	    if period > Period + 1 then 
-            params.buffer[period] = core.sum(params.priceTimesVolume,core.rangeTo (period, Period)) / core.sum(params.source.volume,core.rangeTo (period, Period));
-		end
+       if period > Period + 1 then 
+          params.buffer[period] = core.sum(params.priceTimesVolume,core.rangeTo (period, Period)) / core.sum(params.source.volume,core.rangeTo (period, Period));
+       end
     end
 end
 

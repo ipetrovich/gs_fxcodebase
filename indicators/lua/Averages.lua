@@ -124,7 +124,6 @@ function HPFInit(source, n)
 end
 
 function HPFUpdate(params, period, mode)
-    local source;
     if params.source:isBar() == false then
         core.host:trace("Error: The source must be bars");  
         return;      
@@ -140,7 +139,6 @@ function HPFUpdate(params, period, mode)
         HPFF(period - 1, math.min(period - 1, params.bars), params.lambda, params.source, params.buffer);
         params.last = params.source:serial(period);
     end
-
 end
 
 function HPFF(N, max, lambda, source, output)

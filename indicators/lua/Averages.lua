@@ -5,6 +5,7 @@ function Init()
     indicator:description("Averages indicator");
     indicator:requiredSource(core.Tick);
     indicator:type(core.Indicator);
+    indicator:setTag("AllowAllSources", "y");
 
     indicator.parameters:addGroup("Calculation");
     indicator.parameters:addString("Method", "Method", "", "MVA");
@@ -31,6 +32,9 @@ function Init()
     indicator.parameters:addStringAlternative("Method", "KAMA", "", "KAMA");
     indicator.parameters:addStringAlternative("Method", "ARSI", "", "ARSI");
     indicator.parameters:addStringAlternative("Method", "VIDYA", "", "VIDYA");
+    indicator.parameters:addStringAlternative("Method", "HPF", "", "HPF");
+    indicator.parameters:addStringAlternative("Method", "VAMA", "", "VAMA");
+
 
     indicator.parameters:addInteger("Period", "Period", "", 20);
     indicator.parameters:addBoolean("ColorMode", "ColorMode", "", true);
@@ -107,6 +111,153 @@ end
 -- Implementations
 -- =============================================================================
 
+function HPFInit(source, n)
+    local p = {};
+    p.source = instance.source;
+    p.first = source:first();
+    p.bars = 300;--"Max Bars to calculate"
+    p.lambda = 0.0625 / (math.sin(3.14159265 / Period) ^ 4);
+    p.last_period = 0;
+    p.last = nil;
+
+    return p;
+end
+
+function HPFUpdate(params, period, mode)
+    local source;
+    if params.source:isBar() == false then
+        core.host:trace("Error: The source must be bars");  
+        return;      
+    end
+    
+    if params.last_period > period then
+        params.last = nil;
+    end
+    params.last_period = period;
+
+    -- update only on the last period and only once per bar
+    if period == params.source:size() - 1 and period > 6 and (last == nil or last ~= params.source:serial(period)) then
+        HPFF(period - 1, math.min(period - 1, params.bars), params.lambda, params.source, params.buffer);
+        params.last = params.source:serial(period);
+    end
+
+end
+
+function HPFF(N, max, lambda, source, output)
+    local i;
+    local h1 = 0;
+    local h2 = 0;
+    local h3 = 0;
+    local h4 = 0;
+    local h5 = 0;
+    local hh1 = 0;
+    local hh2 = 0;
+    local hh3 = 0;
+    local hh5 = 0;
+    local hb = 0;
+    local hc = 0;
+    local z = 0;
+    local a, b, c;
+    local close = source.close;
+
+    local ifirst;
+
+    ifirst = N - max + 1;
+
+    a = {};
+    b = {};
+    c = {};
+
+    a[1] = 1 + lambda;
+    b[1] = -2 * lambda;
+    c[1] = lambda;
+
+    for i = 2, max - 2, 1 do
+        a[i] = 6 * lambda + 1;
+        b[i] = -4 * lambda;
+        c[i] = lambda;
+    end
+
+    a[2] = 5 * lambda + 1;
+    a[max - 1] = 5 * lambda + 1;
+    a[max] = 1 + lambda;
+
+    b[max - 1] = -2 * lambda;
+    b[max] = 0;
+
+    c[max - 1] = 0;
+    c[max] = 0;
+
+    for i = 1, max, 1 do
+        z = a[i] - h4 * h1 - hh5 * hh2;
+        hb = b[i];
+        hh1 = h1;
+
+        if z ~= 0 then
+            h1 = (hb - h4 * h2) / z;
+        end
+
+        b[i] = h1;
+        hc = c[i];
+        hh2 = h2;
+
+        if z ~= 0 then
+            h2 = hc / z;
+        end
+
+        c[i] = h2;
+
+        if z ~= 0 then
+            a[i] = (close[ifirst + i - 1] - hh3 * hh5 - h3 * h4) / z;
+        end
+
+        hh3 = h3;
+        h3 = a[i];
+        h4 = hb - h5 * hh1;
+        hh5 = h5;
+        h5 = hc;
+    end
+
+    h2 = 0;
+    h1 = a[1];
+    local j;
+    for i = max, 1, -1 do
+      j = ifirst + i - 1;
+      output[j] = a[i] - b[i] * h1 - c[i] * h2;
+      h2 = h1;
+      h1 = output[j];
+    end
+
+    core.eraseStream(output, core.range(0, ifirst - 1));
+end
+
+
+function VAMAInit(source, n)
+    local p = {};
+    p.source = instance.source;
+    p.first = source:first();
+	
+    p.priceTimesVolume = instance:addInternalStream(p.first,0);
+    return p;
+end
+
+function VAMAUpdate(params, period, mode)
+    if params.source:isBar() == false then
+        core.host:trace("Error: The source must be bars");  
+        return;      
+    end
+
+    if period >= params.first and params.source:hasData(period) then
+	
+	params.priceTimesVolume[period] = params.source.close[period] * params.source.volume[period];
+	   
+	    if period > Period + 1 then 
+            params.buffer[period] = core.sum(params.priceTimesVolume,core.rangeTo (period, Period)) / core.sum(params.source.volume,core.rangeTo (period, Period));
+		end
+    end
+end
+
+
 function ARSIInit(source, n)
     local p = {};
     p.source = instance.source;
@@ -170,6 +321,7 @@ function VIDYAUpdate(params, period, mode)
     end
 end
 
+
 function KAMAInit(source, n)
     local  p = {};
     p.first = source:first() + n - 1+1;
@@ -180,6 +332,7 @@ end
 
 --
 -- Simple moving average
+
 --
 function MVAInit(source, n)
     local  p = {};
@@ -669,6 +822,44 @@ function TriMAgenUpdate(params, period, mode)
     end
     params.buffer[period] = mathex.avg(params.mabuffer, period - params.offset2, period);
 end
+
+--
+-- JSmooth
+--
+--
+function JSmoothInit(source, n)
+    local p = {};
+    p.first = source:first();
+    p.first3 = source:first() + 3;
+    p.alpha = 0.45 * (n - 1) / (0.45 * (n - 1) + 2);
+    p.alpha1 = 1 - p.alpha;
+    p.alpha1_2 = math.pow((1 - p.alpha), 2);
+    p.alpha_2 = math.pow(p.alpha, 2)
+    p.a1 = instance:addInternalStream(source:first(), 0);
+    p.a2 = instance:addInternalStream(source:first(), 0);
+    p.a3 = instance:addInternalStream(source:first(), 0);
+    p.a4 = instance:addInternalStream(source:first(), 0);
+    p.source = source;
+    return p;
+end
+
+function JSmoothUpdate(params, period, mode)
+    if period < params.first3 then
+        params.a1[period] = params.source[period];
+        params.a2[period] = 0;
+        params.a3[period] = params.source[period];
+        params.a4[period] = 0;
+        params.buffer[period] = params.source[period];
+    else
+        local price = params.source[period];
+        params.a1[period]     = params.alpha1 * price + params.alpha * params.a1[period - 1];
+        params.a2[period]     = (price - params.a1[period]) * params.alpha1 + params.alpha * params.a2[period - 1];
+        params.a3[period]     = params.a1[period] + params.a2[period];
+        params.a4[period]     = (params.a3[period] - params.buffer[period - 1]) * params.alpha1_2 + params.alpha_2 * params.a4[period - 1];
+        params.buffer[period] = params.buffer[period - 1] + params.a4[period];
+    end
+end
+
 
 --
 -- JSmooth

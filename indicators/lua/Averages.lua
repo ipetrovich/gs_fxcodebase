@@ -246,12 +246,10 @@ function VAMAUpdate(params, period, mode)
     end
 
     if period >= params.first and params.source:hasData(period) then
-	
-	params.priceTimesVolume[period] = params.source.close[period] * params.source.volume[period];
-	   
-	    if period > Period + 1 then 
+        params.priceTimesVolume[period] = params.source.close[period] * params.source.volume[period];
+        if period > Period + 1 then 
             params.buffer[period] = core.sum(params.priceTimesVolume,core.rangeTo (period, Period)) / core.sum(params.source.volume,core.rangeTo (period, Period));
-		end
+        end
     end
 end
 
@@ -319,7 +317,6 @@ function VIDYAUpdate(params, period, mode)
     end
 end
 
-
 function KAMAInit(source, n)
     local  p = {};
     p.first = source:first() + n - 1+1;
@@ -330,7 +327,6 @@ end
 
 --
 -- Simple moving average
-
 --
 function MVAInit(source, n)
     local  p = {};
@@ -881,10 +877,10 @@ end
 
 function JSmoothUpdate(params, period, mode)
     if period < params.first3 then
-        params.a1[period] = params.source[period];
-        params.a2[period] = 0;
-        params.a3[period] = params.source[period];
-        params.a4[period] = 0;
+        params.a1[period]     = params.source[period];
+        params.a2[period]     = 0;
+        params.a3[period]     = params.source[period];
+        params.a4[period]     = 0;
         params.buffer[period] = params.source[period];
     else
         local price = params.source[period];

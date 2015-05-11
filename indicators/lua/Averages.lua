@@ -139,7 +139,6 @@ function HPFUpdate(params, period, mode)
         HPFF(period - 1, math.min(period - 1, params.bars), params.lambda, params.source, params.buffer);
         params.last = params.source:serial(period);
     end
-
 end
 
 function HPFF(N, max, lambda, source, output)
@@ -319,7 +318,6 @@ function VIDYAUpdate(params, period, mode)
     end
 end
 
-
 function KAMAInit(source, n)
     local  p = {};
     p.first = source:first() + n - 1+1;
@@ -330,7 +328,6 @@ end
 
 --
 -- Simple moving average
-
 --
 function MVAInit(source, n)
     local  p = {};
@@ -881,10 +878,10 @@ end
 
 function JSmoothUpdate(params, period, mode)
     if period < params.first3 then
-        params.a1[period] = params.source[period];
-        params.a2[period] = 0;
-        params.a3[period] = params.source[period];
-        params.a4[period] = 0;
+        params.a1[period]     = params.source[period];
+        params.a2[period]     = 0;
+        params.a3[period]     = params.source[period];
+        params.a4[period]     = 0;
         params.buffer[period] = params.source[period];
     else
         local price = params.source[period];
